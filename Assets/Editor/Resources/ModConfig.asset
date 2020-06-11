@@ -27,4 +27,4 @@ MonoBehaviour:
     Ruleseed Supported'
   version: 1.0
   outputFolder: build
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: 8172ef47b0a218944a165d863654a331, type: 3}

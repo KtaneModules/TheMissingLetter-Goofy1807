@@ -2,9 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Text.RegularExpressions;
 using KModkit;
-using NUnit;
 using UnityEngine;
 
 public class TheMissingLetterScript : MonoBehaviour
@@ -16,15 +15,19 @@ public class TheMissingLetterScript : MonoBehaviour
 
     public KMSelectable[] Buttons;
     public TextMesh[] Labels;
+    public GameObject[] Planes;
+    public GameObject[] WordPlanes;
 
     static int moduleIdCounter = 1;
     int moduleId;
     bool moduleSolved = false;
     int inpCount = 0;
+    bool resetActive = false;
     int resultN;
     string resultWord;
 
     List<char> alph = new List<char>();
+    List<int> wButtons = new List<int>();
 
     static readonly string[][] allWords = new[]
     {
@@ -206,26 +209,215 @@ public class TheMissingLetterScript : MonoBehaviour
     {
         return delegate ()
         {
-            if (moduleSolved)
+            if (moduleSolved || resetActive)
                 return false;
 
             if (resultWord[inpCount].Equals(alph[btn]))
-            {
-                inpCount++;
-                if (inpCount == resultWord.Length)
-                {
-                    Debug.LogFormat(@"[The Missing Letter #{0}] Module solved.", moduleId);
-                    BombModule.HandlePass();
-                    moduleSolved = true;
-                }
-            }
+                StartCoroutine(MoveButton(btn));
             else
             {
                 Debug.LogFormat(@"[The Missing Letter #{0}] Entered: ""{1}"" — strike!", moduleId, resultWord.Substring(0, inpCount) + alph[btn]);
                 BombModule.HandleStrike();
-                inpCount = 0;
+                if (inpCount != 0)
+                {
+                    resetActive = true;
+                    StartCoroutine(ResetActivate());
+                }
             }
             return false;
         };
     }
+
+    private IEnumerator ResetActivate()
+    {
+        for (var i = 0; i < wButtons.Count() - 1; i++)
+        {
+            StartCoroutine(Reset(inpCount));
+            inpCount--;
+            yield return new WaitForSeconds(.2f);
+        }
+        yield return StartCoroutine(Reset(inpCount));
+        inpCount = 0;
+        resetActive = false;
+        wButtons.Clear();
+    }
+
+    private IEnumerator Reset(int cP)
+    {
+        var curPos = cP - 1;
+        GetComponent<KMSelectable>().Children[wButtons[curPos]] = Buttons[wButtons[curPos]];
+        GetComponent<KMSelectable>().UpdateChildren();
+
+        var duration = .2f;
+        var elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[wButtons[curPos]].transform.localPosition = Vector3.Lerp(Buttons[wButtons[curPos]].transform.localPosition, new Vector3(Buttons[wButtons[curPos]].transform.localPosition.x, 0.0135f, Buttons[wButtons[curPos]].transform.localPosition.z), elapsed / duration);
+        }
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[wButtons[curPos]].transform.localPosition = Vector3.Lerp(Buttons[wButtons[curPos]].transform.localPosition, new Vector3(Buttons[wButtons[curPos]].transform.localPosition.x, 0.005f, Buttons[wButtons[curPos]].transform.localPosition.z), elapsed / duration);
+        }
+
+        Buttons[wButtons[curPos]].transform.localPosition = new Vector3(Planes[wButtons[curPos]].transform.localPosition.x, Buttons[wButtons[curPos]].transform.localPosition.y, Planes[wButtons[curPos]].transform.localPosition.z);
+        Buttons[wButtons[curPos]].transform.localScale = new Vector3(1.1f, 1.1f, 0.5f);
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[wButtons[curPos]].transform.localPosition = Vector3.Lerp(Buttons[wButtons[curPos]].transform.localPosition, new Vector3(Buttons[wButtons[curPos]].transform.localPosition.x, 0.0135f, Buttons[wButtons[curPos]].transform.localPosition.z), elapsed / duration);
+        }
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[wButtons[curPos]].transform.localPosition = Vector3.Lerp(Buttons[wButtons[curPos]].transform.localPosition, new Vector3(Buttons[wButtons[curPos]].transform.localPosition.x, 0.012f, Buttons[wButtons[curPos]].transform.localPosition.z), elapsed / duration);
+        }
+    }
+
+    private IEnumerator MoveButton(int btn)
+    {
+        GetComponent<KMSelectable>().Children[btn] = null;
+        GetComponent<KMSelectable>().UpdateChildren();
+        wButtons.Add(btn);
+
+        var curPos = inpCount;
+        inpCount++;
+
+        var duration = .2f;
+        var elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[btn].transform.localPosition = Vector3.Lerp(Buttons[btn].transform.localPosition, new Vector3(Buttons[btn].transform.localPosition.x, 0.0135f, Buttons[btn].transform.localPosition.z), elapsed / duration);
+        }
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[btn].transform.localPosition = Vector3.Lerp(Buttons[btn].transform.localPosition, new Vector3(Buttons[btn].transform.localPosition.x, 0.005f, Buttons[btn].transform.localPosition.z), elapsed / duration);
+        }
+
+        Buttons[btn].transform.localPosition = new Vector3(WordPlanes[curPos].transform.localPosition.x, Buttons[btn].transform.localPosition.y, WordPlanes[curPos].transform.localPosition.z);
+        Buttons[btn].transform.localScale = new Vector3(0.7f, 0.7f, 0.4f);
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[btn].transform.localPosition = Vector3.Lerp(Buttons[btn].transform.localPosition, new Vector3(Buttons[btn].transform.localPosition.x, 0.0135f, Buttons[btn].transform.localPosition.z), elapsed / duration);
+        }
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            Buttons[btn].transform.localPosition = Vector3.Lerp(Buttons[btn].transform.localPosition, new Vector3(Buttons[btn].transform.localPosition.x, 0.012f, Buttons[btn].transform.localPosition.z), elapsed / duration);
+        }
+        curPos++;
+        if (curPos == resultWord.Length)
+        {
+            Debug.LogFormat(@"[The Missing Letter #{0}] Module solved.", moduleId);
+            BombModule.HandlePass();
+            moduleSolved = true;
+            var unusedButtons = Buttons.Where(bt => bt.transform.localScale.x > 1f).ToList();
+            for (var i = 0; i < unusedButtons.Count(); i++)
+                StartCoroutine(CleanUp(unusedButtons, i));
+        }
+    }
+
+    private IEnumerator CleanUp(List<KMSelectable> unusedButtons, int i)
+    {
+        var duration = .2f;
+        var elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            unusedButtons[i].transform.localPosition = Vector3.Lerp(unusedButtons[i].transform.localPosition, new Vector3(unusedButtons[i].transform.localPosition.x, 0.0135f, unusedButtons[i].transform.localPosition.z), elapsed / duration);
+        }
+
+        duration = .2f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            yield return null;
+            elapsed += Time.deltaTime;
+            unusedButtons[i].transform.localPosition = Vector3.Lerp(unusedButtons[i].transform.localPosition, new Vector3(unusedButtons[i].transform.localPosition.x, 0.005f, unusedButtons[i].transform.localPosition.z), elapsed / duration);
+        }
+    }
+
+#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} A1 C3 D5 [Press buttons A1, C3 and D5 where the letter is the column and the digit is the row]";
+#pragma warning restore 414
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        Match m;
+        if (moduleSolved)
+        {
+            yield return "sendtochaterror The module is already solved.";
+            yield break;
+        }
+        else if ((m = Regex.Match(command, @"^\s*([ABCDE12345 ]+)\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).Success)
+        {
+            yield return null;
+            var cell = m.Groups[0].Value.Split(' ');
+            for (int i = 0; i < cell.Length; i++)
+            {
+                if (Regex.IsMatch(cell[i], @"^\s*[ABCDE][12345]\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+                    continue;
+                else
+                {
+                    yield return "sendtochaterror Incorrect syntax.";
+                    yield break;
+                }
+            }
+            for (int i = 0; i < cell.Length; i++)
+            {
+                var row = int.Parse(cell[i].Substring(1, 1));
+                var col = cell[i].ToUpperInvariant()[0] - 'A' + 1;
+                Buttons[5 * col - 1 + row - 5].OnInteract();
+                yield return new WaitForSeconds(.05f);
+            }
+            yield break;
+        }
+        else
+        {
+            yield return "sendtochaterror Invalid Command";
+            yield break;
+        }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        Debug.LogFormat(@"[The Missing Letter #{0}] Module was force solved by TP", moduleId);
+
+        for (var i = inpCount; i < resultWord.Length; i++)
+        {
+            Buttons[alph.IndexOf(resultWord[i])].OnInteract();
+            yield return new WaitForSeconds(.1f);
+        }
+    }
+
 }
