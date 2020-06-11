@@ -11,10 +11,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
   m_Name: ModConfig
   m_EditorClassIdentifier: 
-  id: 
-  title: 
+  id: theMissingLetter
+  title: The Missing Letter
   author: Goofy
-  description: 
+  description: 'Perform a calculation based on a missing letter and enter the correct
+    word.
+
+
+    Module idea by Asew.
+
+
+    TwitchPlays Supported
+
+
+    Ruleseed Supported'
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 0}
